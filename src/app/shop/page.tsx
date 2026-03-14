@@ -7,7 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import { Filter, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
-export default function ProductsPage() {
+export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +75,13 @@ export default function ProductsPage() {
       <Header onSearch={handleSearch} />
       
       <main className="pt-16">
+        <div className="bg-primary text-white py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold">Shop</h1>
+            <p className="text-gray-300 mt-1">Browse our enterprise technology catalog</p>
+          </div>
+        </div>
+        
         <div className="flex">
           <FilterSidebar
             categories={categories}

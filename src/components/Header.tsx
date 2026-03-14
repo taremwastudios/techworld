@@ -30,10 +30,18 @@ export default function Header({ onSearch }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-primary text-white h-16 border-b border-primary-light">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Package className="w-8 h-8" />
-          <span className="text-xl font-bold tracking-tight">EOS</span>
-        </Link>
+        <div className="flex items-center gap-6 shrink-0">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Package className="w-8 h-8" />
+            <span className="text-xl font-bold tracking-tight">TechWorld</span>
+          </Link>
+          <Link 
+            href="/shop" 
+            className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            Shop
+          </Link>
+        </div>
 
         <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
           <div className="flex w-full">

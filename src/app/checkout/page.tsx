@@ -85,7 +85,7 @@ export default function CheckoutPage() {
           <div className="max-w-2xl mx-auto text-center py-20">
             <Package className="w-16 h-16 mx-auto text-text-muted mb-4" />
             <h1 className="text-2xl font-semibold mb-2">Your cart is empty</h1>
-            <Link href="/products" className="text-accent hover:text-accent-hover">
+            <Link href="/shop" className="text-accent hover:text-accent-hover">
               Continue shopping
             </Link>
           </div>
@@ -110,7 +110,7 @@ export default function CheckoutPage() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link
-                href="/products"
+                href="/shop"
                 className="px-6 py-3 border border-border bg-white hover:bg-background-alt transition-colors"
               >
                 Continue Shopping

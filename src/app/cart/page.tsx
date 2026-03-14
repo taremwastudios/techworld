@@ -21,7 +21,7 @@ export default function CartPage() {
             <h1 className="text-2xl font-semibold mb-2">Your cart is empty</h1>
             <p className="text-text-secondary mb-6">Add some products to get started</p>
             <Link
-              href="/products"
+              href="/shop"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white hover:bg-primary-light transition-colors"
             >
               Browse Products

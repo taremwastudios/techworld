@@ -1,29 +1,33 @@
-# Active Context: Enterprise Order System (EOS)
+# Active Context: TechWorld Platform
 
 ## Current State
 
-**Project Status**: Full-stack e-commerce platform complete
+**Project Status**: Full-stack e-commerce platform with landing page
 
-The Enterprise Order System is a complete Amazon-style ordering platform built with Next.js 16, TypeScript, and Tailwind CSS 4. Features include product catalog, multi-step checkout, user accounts, and admin dashboard.
+TechWorld is an Amazon-style ordering platform built with Next.js 16, TypeScript, and Tailwind CSS 4. Features include landing page, product catalog at /shop, multi-step checkout, user accounts, and admin dashboard.
 
 ## Recently Completed
 
-- [x] Product Catalog with filtering, sorting, and search
+- [x] Landing Page with Hero section and About section
+- [x] Product Catalog (/shop) with filtering, sorting, and search
 - [x] Multi-step Checkout (Cart -> Shipping -> Payment -> Review)
 - [x] Cart persistence with Zustand (localStorage)
 - [x] One-Click Buy functionality
 - [x] User authentication (login/register)
 - [x] Admin Dashboard with order and product management
 - [x] Professional design with IBM Plex Sans font
-- [x] Deep Navy/Slate Gray color palette
+- [x] Deep Navy primary color scheme
 - [x] Sharp corners (0px border-radius) as specified
 - [x] Lucide-React icons throughout
+- [x] TechWorld branding throughout
+- [x] Favicon updated to 3D box icon
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/products/` | Product catalog page | Complete |
+| `src/app/page.tsx` | Landing page | Complete |
+| `src/app/shop/` | Product catalog page | Complete |
 | `src/app/cart/` | Shopping cart page | Complete |
 | `src/app/checkout/` | Multi-step checkout | Complete |
 | `src/app/account/` | Login/register/profile | Complete |
@@ -35,11 +39,14 @@ The Enterprise Order System is a complete Amazon-style ordering platform built w
 | `src/store/` | Zustand stores | Complete |
 | `src/lib/` | Types and mock data | Complete |
 
-## Current Focus
+## Routing
 
-All core features are implemented. The system is ready for:
-- Real database integration (currently using mock data)
-- Production deployment
+- `/` - Landing Page (TechWorld branding)
+- `/shop` - Product Catalog
+- `/cart` - Shopping Cart
+- `/checkout` - Multi-step Checkout
+- `/account` - User Account/Login
+- `/admin` - Admin Dashboard
 
 ## Demo Credentials
 
@@ -59,7 +66,8 @@ All core features are implemented. The system is ready for:
 | Date | Changes |
 |------|---------|
 | Initial | Base Next.js template created |
-| Now | Full e-commerce platform built |
+| Phase 1 | Full e-commerce platform built |
+| Now | Landing page added, branding updated to TechWorld |
 
 ## Pending Improvements
 
