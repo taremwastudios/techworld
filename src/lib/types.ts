@@ -64,5 +64,10 @@ export interface Game {
   image: string;
   downloadUrl: string;
   isFree: boolean;
+  version: string;
+  category: 'AI' | 'Gaming';
+  downloadCount: number;
+  fileSize?: number;
+  fileName?: string;
   createdAt: string;
 }
