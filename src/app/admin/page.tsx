@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Package, ShoppingCart, Users, DollarSign, Plus, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, Plus, Edit, Trash2, Eye, Loader2, Gamepad2 } from 'lucide-react';
 import Header from '@/components/Header';
-import { Product, Order } from '@/lib/types';
+import { Product, Order, Game } from '@/lib/types';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
   
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -23,6 +25,15 @@ export default function AdminDashboard() {
     stock: 0,
   });
 
+  const [newGame, setNewGame] = useState({
+    title: '',
+    description: '',
+    price: 0,
+    image: '',
+    downloadUrl: '',
+    isFree: false,
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -30,14 +41,17 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ordersRes, productsRes] = await Promise.all([
+      const [ordersRes, productsRes, gamesRes] = await Promise.all([
         fetch('/api/orders'),
         fetch('/api/products'),
+        fetch('/api/games'),
       ]);
       const ordersData = await ordersRes.json();
       const productsData = await productsRes.json();
+      const gamesData = await gamesRes.json();
       setOrders(ordersData);
       setProducts(productsData.products);
+      setGames(gamesData.games || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -61,6 +75,25 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Failed to add product:', error);
+    }
+  };
+
+  const handleAddGame = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGame),
+      });
+      if (res.ok) {
+        const game = await res.json();
+        setGames([...games, game]);
+        setShowAddGame(false);
+        setNewGame({ title: '', description: '', price: 0, image: '', downloadUrl: '', isFree: false });
+      }
+    } catch (error) {
+      console.error('Failed to add game:', error);
     }
   };
 
@@ -128,9 +161,18 @@ export default function AdminDashboard() {
                 <Users className="w-8 h-8 text-warning" />
               </div>
             </div>
+            <div className="bg-white border border-border p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Games</p>
+                  <p className="text-2xl font-semibold">{games.length}</p>
+                </div>
+                <Gamepad2 className="w-8 h-8 text-accent" />
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 flex-wrap">
             <button
               onClick={() => setActiveTab('orders')}
               className={`px-4 py-2 border transition-colors ${
@@ -152,11 +194,28 @@ export default function AdminDashboard() {
               Products
             </button>
             <button
+              onClick={() => setActiveTab('games')}
+              className={`px-4 py-2 border transition-colors ${
+                activeTab === 'games'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white border-border hover:border-primary'
+              }`}
+            >
+              Games
+            </button>
+            <button
               onClick={() => setShowAddProduct(true)}
               className="px-4 py-2 bg-accent hover:bg-accent-hover text-white border border-accent transition-colors flex items-center gap-2 ml-auto"
             >
               <Plus className="w-4 h-4" />
               Add Product
+            </button>
+            <button
+              onClick={() => setShowAddGame(true)}
+              className="px-4 py-2 bg-success hover:bg-success/90 text-white border border-success transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Game
             </button>
           </div>
 
@@ -220,6 +279,88 @@ export default function AdminDashboard() {
                             <button className="p-1 hover:text-accent transition-colors">
                               <Eye className="w-4 h-4" />
                             </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : activeTab === 'games' ? (
+            <div className="bg-white border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-background-alt">
+                    <tr>
+                      <th className="text-left p-4 font-semibold text-sm">Game</th>
+                      <th className="text-left p-4 font-semibold text-sm">Description</th>
+                      <th className="text-left p-4 font-semibold text-sm">Price</th>
+                      <th className="text-left p-4 font-semibold text-sm">Type</th>
+                      <th className="text-left p-4 font-semibold text-sm">Download</th>
+                      <th className="text-left p-4 font-semibold text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {games.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-text-secondary">
+                          No games found
+                        </td>
+                      </tr>
+                    ) : (
+                      games.map((game) => (
+                        <tr key={game.id} className="border-t border-border hover:bg-background-alt">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-background-alt relative">
+                                <Image
+                                  src={game.image}
+                                  alt={game.title}
+                                  width={40}
+                                  height={40}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="text-sm font-medium line-clamp-1">{game.title}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm max-w-xs line-clamp-2">{game.description}</td>
+                          <td className="p-4 text-sm font-medium">
+                            {game.isFree ? 'FREE' : `$${game.price.toFixed(2)}`}
+                          </td>
+                          <td className="p-4 text-sm">
+                            <span className={`px-2 py-1 text-xs font-medium ${
+                              game.isFree 
+                                ? 'bg-success/10 text-success border border-success/20' 
+                                : 'bg-accent/10 text-accent border border-accent/20'
+                            }`}>
+                              {game.isFree ? 'Free' : 'Premium'}
+                            </span>
+                          </td>
+                          <td className="p-4 text-sm">
+                            {game.downloadUrl ? (
+                              <a 
+                                href={game.downloadUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-accent hover:underline"
+                              >
+                                Link
+                              </a>
+                            ) : (
+                              <span className="text-text-muted">-</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <button className="p-1 hover:text-accent transition-colors">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 hover:text-error transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -372,6 +513,96 @@ export default function AdminDashboard() {
                 className="w-full h-12 bg-accent hover:bg-accent-hover text-white transition-colors"
               >
                 Add Product
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddGame && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Add New Game</h2>
+              <button
+                onClick={() => setShowAddGame(false)}
+                className="p-1 hover:bg-background-alt"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddGame} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Game Title</label>
+                <input
+                  type="text"
+                  value={newGame.title}
+                  onChange={(e) => setNewGame({ ...newGame, title: e.target.value })}
+                  className="w-full h-10 px-3 border border-border focus:border-accent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                  value={newGame.description}
+                  onChange={(e) => setNewGame({ ...newGame, description: e.target.value })}
+                  className="w-full h-24 px-3 py-2 border border-border focus:border-accent resize-none"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newGame.price}
+                    onChange={(e) => setNewGame({ ...newGame, price: Number(e.target.value) })}
+                    className="w-full h-10 px-3 border border-border focus:border-accent"
+                    disabled={newGame.isFree}
+                  />
+                </div>
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newGame.isFree}
+                      onChange={(e) => setNewGame({ ...newGame, isFree: e.target.checked, price: e.target.checked ? 0 : newGame.price })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium">Free Download</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Image URL</label>
+                <input
+                  type="url"
+                  value={newGame.image}
+                  onChange={(e) => setNewGame({ ...newGame, image: e.target.value })}
+                  className="w-full h-10 px-3 border border-border focus:border-accent"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Download Link / File URL</label>
+                <input
+                  type="url"
+                  value={newGame.downloadUrl}
+                  onChange={(e) => setNewGame({ ...newGame, downloadUrl: e.target.value })}
+                  className="w-full h-10 px-3 border border-border focus:border-accent"
+                  placeholder="https://example.com/download/game.zip"
+                />
+                <p className="text-xs text-text-muted mt-1">
+                  Enter a URL to a downloadable file or installer
+                </p>
+              </div>
+              <button
+                type="submit"
+                className="w-full h-12 bg-success hover:bg-success/90 text-white transition-colors"
+              >
+                Add Game
               </button>
             </form>
           </div>

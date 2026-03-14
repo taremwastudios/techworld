@@ -55,3 +55,14 @@ export interface Category {
   name: string;
   count: number;
 }
+
+export interface Game {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  downloadUrl: string;
+  isFree: boolean;
+  createdAt: string;
+}

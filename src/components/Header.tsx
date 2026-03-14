@@ -41,6 +41,12 @@ export default function Header({ onSearch }: HeaderProps) {
           >
             Shop
           </Link>
+          <Link 
+            href="/studio" 
+            className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            Developer Showcase
+          </Link>
         </div>
 
         <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
@@ -156,6 +162,22 @@ export default function Header({ onSearch }: HeaderProps) {
                 </button>
               </div>
             </form>
+            <div className="space-y-2">
+              <Link 
+                href="/shop" 
+                className="block py-2 text-gray-300 hover:text-white"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Shop
+              </Link>
+              <Link 
+                href="/studio" 
+                className="block py-2 text-gray-300 hover:text-white"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Developer Showcase
+              </Link>
+            </div>
           </div>
         )}
       </div>
