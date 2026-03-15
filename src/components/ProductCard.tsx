@@ -49,7 +49,7 @@ export default function ProductCard({ product, showQuickBuy = true }: ProductCar
     <div className="card shadow-card hover:shadow-lg transition-shadow group">
       <div className="relative aspect-square bg-background-alt overflow-hidden">
         <Image
-          src={product.image}
+          src={product.image_url}
           alt={product.name}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -76,7 +76,7 @@ export default function ProductCard({ product, showQuickBuy = true }: ProductCar
         
         <div className="flex items-center gap-1 mb-2">
           {renderStars(product.rating)}
-          <span className="text-xs text-text-muted ml-1">({product.reviewCount})</span>
+          <span className="text-xs text-text-muted ml-1">({product.review_count})</span>
         </div>
         
         <p className="text-xl font-bold text-primary mb-3">

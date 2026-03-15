@@ -51,7 +51,7 @@ export default function CartPage() {
                   >
                     <div className="w-24 h-24 bg-background-alt shrink-0">
                       <Image
-                        src={item.product.image}
+                        src={item.product.image_url}
                         alt={item.product.name}
                         width={96}
                         height={96}

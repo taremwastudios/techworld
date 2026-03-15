@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+const getStripe = () => {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
+  return new Stripe(key);
+};
 
 export async function POST(request: Request) {
   try {
+    const stripe = getStripe();
     const body = await request.json();
     const { sessionId, userId } = body;
 
