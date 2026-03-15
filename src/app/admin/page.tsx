@@ -495,7 +495,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-primary shrink-0 relative overflow-hidden">
                                 <Image
-                                  src={game.image}
+                                  src={game.image_url}
                                   alt={game.title}
                                   width={40}
                                   height={40}
@@ -646,7 +646,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-primary shrink-0">
                               <Image
-                                src={product.image}
+                                src={product.image_url}
                                 alt={product.name}
                                 width={40}
                                 height={40}
