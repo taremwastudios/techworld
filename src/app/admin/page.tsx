@@ -186,7 +186,7 @@ export default function AdminDashboard() {
   const handleAddGame = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    let downloadUrl = newGame.downloadUrl;
+    let downloadUrl = newGame.download_url;
     
     if (selectedFile) {
       const uploadedUrl = await uploadFile();
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newGame,
-          downloadUrl,
+          download_url: downloadUrl,
           fileName: selectedFile?.name,
           fileSize: selectedFile?.size,
         }),
@@ -218,8 +218,8 @@ export default function AdminDashboard() {
           description: '',
           price: 0,
           image: '',
-          downloadUrl: '',
-          isFree: false,
+          download_url: '',
+          is_free: false,
           version: '1.0.0',
           category: 'Gaming',
         });
