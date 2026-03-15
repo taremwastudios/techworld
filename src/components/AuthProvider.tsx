@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -15,34 +15,93 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const MOCK_USERS: Record<string, { password: string; name: string; role: string }> = {
+  'buyer@example.com': { password: 'buyer123', name: 'Buyer User', role: 'buyer' },
+  'admin@example.com': { password: 'admin123', name: 'Admin User', role: 'admin' },
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const [useMock, setUseMock] = useState(false);
+  
+  let supabase: ReturnType<typeof createClient> | null = null;
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const configured = isSupabaseConfigured();
+    setUseMock(!configured);
+    
+    if (configured) {
+      supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    } else {
+      const storedUser = localStorage.getItem('mockUser');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed as User);
+      }
+      setLoading(false);
+    }
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (useMock) {
+      const mockUser = MOCK_USERS[email];
+      if (mockUser && mockUser.password === password) {
+        const userData = {
+          id: email,
+          email,
+          role: mockUser.role,
+          app_metadata: {},
+          user_metadata: { full_name: mockUser.name },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        } as unknown as User;
+        localStorage.setItem('mockUser', JSON.stringify(userData));
+        setUser(userData);
+        return { error: null };
+      }
+      return { error: new Error('Invalid email or password') };
+    }
+    
+    if (!supabase) supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    if (useMock) {
+      if (MOCK_USERS[email]) {
+        return { error: new Error('User already exists') };
+      }
+      const userData = {
+        id: email,
+        email,
+        role: 'buyer',
+        app_metadata: {},
+        user_metadata: { full_name: fullName },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+      } as unknown as User;
+      localStorage.setItem('mockUser', JSON.stringify(userData));
+      setUser(userData);
+      return { error: null };
+    }
+    
+    if (!supabase) supabase = createClient();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -66,6 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (useMock) {
+      localStorage.removeItem('mockUser');
+      setUser(null);
+      return;
+    }
+    
+    if (!supabase) supabase = createClient();
     await supabase.auth.signOut();
   };
 

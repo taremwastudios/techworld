@@ -31,12 +31,6 @@ export default function Header({ onSearch }: HeaderProps) {
             <span className="text-xl font-bold tracking-tight text-white">Illusions Family</span>
           </Link>
           <Link 
-            href="/game-store" 
-            className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
-          >
-            Shop
-          </Link>
-          <Link 
             href="/ai-tools" 
             className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
           >
@@ -129,13 +123,6 @@ export default function Header({ onSearch }: HeaderProps) {
         {mobileMenuOpen && (
           <div className="absolute top-16 left-0 right-0 bg-primary border-t border-primary-light p-4 md:hidden">
             <div className="space-y-2">
-              <Link 
-                href="/game-store" 
-                className="block py-2 text-gray-300 hover:text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Shop
-              </Link>
               <Link 
                 href="/ai-tools" 
                 className="block py-2 text-gray-300 hover:text-white"
