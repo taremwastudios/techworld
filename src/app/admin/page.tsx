@@ -272,7 +272,7 @@ export default function AdminDashboard() {
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
   const totalOrders = orders.length;
-  const totalDownloads = games.reduce((sum, g) => sum + g.downloadCount, 0);
+  const totalDownloads = games.reduce((sum, g) => sum + g.download_count, 0);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
