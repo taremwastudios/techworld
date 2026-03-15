@@ -70,6 +70,8 @@ export default function AdminDashboard() {
   }, [authUser]);
 
   const checkAdminAndFetch = async () => {
+    if (!authUser) return;
+    
     const supabase = createClient();
     const { data: profileData } = await supabase
       .from('profiles')
