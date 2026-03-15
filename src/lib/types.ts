@@ -4,11 +4,12 @@ export interface Product {
   description: string;
   price: number;
   category: string;
-  image: string;
+  image_url: string;
   rating: number;
-  reviewCount: number;
+  review_count: number;
   stock: number;
-  createdAt: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface Address {
