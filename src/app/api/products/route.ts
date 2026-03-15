@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       products.sort((a, b) => b.rating - a.rating);
       break;
     case 'newest':
-      products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       break;
     default:
       break;
