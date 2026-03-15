@@ -527,7 +527,7 @@ export default function AdminDashboard() {
                             )}
                           </td>
                           <td className="p-4 text-sm text-gray-300">
-                            {game.downloadCount.toLocaleString()}
+                            {game.download_count.toLocaleString()}
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
