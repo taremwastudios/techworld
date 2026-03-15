@@ -531,10 +531,10 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              {getFileIcon(game.downloadUrl)}
-                              {game.fileSize && (
+                              {getFileIcon(game.download_url)}
+                              {game.file_size && (
                                 <span className="text-xs text-gray-500">
-                                  {formatFileSize(game.fileSize)}
+                                  {formatFileSize(game.file_size)}
                                 </span>
                               )}
                             </div>
