@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import Footer from "@/components/Footer";
 
 const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '600', '700'],
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`${ibmPlexSans.variable} font-sans antialiased`}>
         <Providers>
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>

@@ -22,6 +22,8 @@ Illusions Family is a digital marketplace built with Next.js 16, TypeScript, and
 - [x] Lucide-React icons throughout (NO EMOJIS)
 - [x] Supabase integration for auth and database
 - [x] Stripe checkout integration
+- [x] Consistent Footer on all pages with Illusions Family branding
+- [x] Added "Shop" link to Header navigation
 
 ## Current Structure
 
@@ -40,7 +42,8 @@ Illusions Family is a digital marketplace built with Next.js 16, TypeScript, and
 | `src/lib/supabase.ts` | Supabase client | Complete |
 | `src/components/AuthProvider.tsx` | Supabase auth context | Complete |
 | `src/components/Providers.tsx` | App providers wrapper | Complete |
-| `src/components/Header.tsx` | Navigation header | Complete |
+| `src/components/Header.tsx` | Navigation header with Shop link | Complete |
+| `src/components/Footer.tsx` | Site footer (on all pages) | Complete |
 | `src/lib/` | Types and mock data | Complete |
 
 ## Routing
