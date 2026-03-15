@@ -16,8 +16,96 @@ import {
   ChevronRight
 } from 'lucide-react';
 import Header from '@/components/Header';
-import { createClient } from '@/lib/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase';
 import { SupabaseGame } from '@/lib/types';
+
+const MOCK_GAMES: SupabaseGame[] = [
+  {
+    id: '1',
+    title: 'Cosmic Warriors RPG',
+    description: 'Epic space adventure with stunning graphics and intense combat. Build your fleet and conquer the galaxy.',
+    price: 14.99,
+    image_url: 'https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=800&h=600&fit=crop',
+    category: 'Gaming',
+    version: '1.3.2',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 5420,
+    file_size: 1258291,
+  },
+  {
+    id: '2',
+    title: 'Speed Racer Legends',
+    description: 'High-octane racing game with realistic physics. Customize your cars and race against players worldwide.',
+    price: 9.99,
+    image_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=600&fit=crop',
+    category: 'Gaming',
+    version: '2.0.1',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 3200,
+    file_size: 892416,
+  },
+  {
+    id: '3',
+    title: 'Dungeon Explorer',
+    description: 'Action-packed dungeon crawler with roguelike elements. Explore procedurally generated dungeons.',
+    price: 0,
+    image_url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&h=600&fit=crop',
+    category: 'Gaming',
+    version: '1.0.5',
+    is_free: true,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 12000,
+    file_size: 256000,
+  },
+  {
+    id: '4',
+    title: 'Puzzle Master Deluxe',
+    description: 'Brain-teasing puzzle collection with over 500 levels. Challenge your mind with innovative puzzles.',
+    price: 4.99,
+    image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=600&fit=crop',
+    category: 'Gaming',
+    version: '3.1.0',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 8900,
+    file_size: 156437,
+  },
+  {
+    id: '5',
+    title: 'Battle Arena MOBA',
+    description: '5v5 competitive MOBA with unique heroes. Team up and dominate the arena.',
+    price: 0,
+    image_url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=600&fit=crop',
+    category: 'Gaming',
+    version: '1.8.0',
+    is_free: true,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 25000,
+    file_size: 524288,
+  },
+];
 
 export default function GameStorePage() {
   const [games, setGames] = useState<SupabaseGame[]>([]);
@@ -31,6 +119,13 @@ export default function GameStorePage() {
 
   const fetchGames = async () => {
     try {
+      if (!isSupabaseConfigured()) {
+        setGames(MOCK_GAMES);
+        setSelectedGame(MOCK_GAMES[0]);
+        setLoading(false);
+        return;
+      }
+      
       const supabase = createClient();
       const { data } = await supabase
         .from('games')
@@ -47,6 +142,8 @@ export default function GameStorePage() {
       }
     } catch (error) {
       console.error('Failed to fetch games:', error);
+      setGames(MOCK_GAMES);
+      setSelectedGame(MOCK_GAMES[0]);
     } finally {
       setLoading(false);
     }
@@ -274,21 +371,6 @@ export default function GameStorePage() {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-8 border-t border-border">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Box className="w-6 h-6 text-accent" />
-              <span className="font-semibold">Illusions Family</span>
-            </div>
-            <div className="text-sm text-gray-400">
-              &copy; 2024 Illusions Family. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -19,8 +19,79 @@ import {
   Cloud
 } from 'lucide-react';
 import Header from '@/components/Header';
-import { createClient } from '@/lib/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase';
 import { SupabaseGame } from '@/lib/types';
+
+const MOCK_AI_TOOLS: SupabaseGame[] = [
+  {
+    id: '1',
+    title: 'SmartAI Console',
+    description: 'Advanced AI assistant for productivity and automation. Features natural language processing, code generation, and smart workflows.',
+    price: 49.99,
+    image_url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop',
+    category: 'AI',
+    version: '2.1.0',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 1250,
+    file_size: 256901,
+  },
+  {
+    id: '2',
+    title: 'Neural Text Processor',
+    description: 'AI-powered text analysis and generation tool. Perfect for content creators, researchers, and writers.',
+    price: 29.99,
+    image_url: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=600&fit=crop',
+    category: 'AI',
+    version: '1.5.0',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 890,
+    file_size: 188743,
+  },
+  {
+    id: '3',
+    title: 'DataMind Analytics',
+    description: 'Machine learning platform for business intelligence. Analyze trends and predict outcomes with ease.',
+    price: 99.99,
+    image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop',
+    category: 'AI',
+    version: '3.0.0',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 560,
+    file_size: 545259,
+  },
+  {
+    id: '4',
+    title: 'VoiceGen Pro',
+    description: 'AI voice generation and cloning tool. Create realistic synthetic voices for any purpose.',
+    price: 39.99,
+    image_url: 'https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=800&h=600&fit=crop',
+    category: 'AI',
+    version: '1.2.0',
+    is_free: false,
+    download_url: '#',
+    storage_path: '',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    download_count: 2100,
+    file_size: 325058,
+  },
+];
 
 export default function AIToolsPage() {
   const [tools, setTools] = useState<SupabaseGame[]>([]);
@@ -33,6 +104,13 @@ export default function AIToolsPage() {
 
   const fetchTools = async () => {
     try {
+      if (!isSupabaseConfigured()) {
+        setTools(MOCK_AI_TOOLS);
+        setSelectedTool(MOCK_AI_TOOLS[0]);
+        setLoading(false);
+        return;
+      }
+      
       const supabase = createClient();
       const { data } = await supabase
         .from('games')
@@ -49,6 +127,8 @@ export default function AIToolsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch tools:', error);
+      setTools(MOCK_AI_TOOLS);
+      setSelectedTool(MOCK_AI_TOOLS[0]);
     } finally {
       setLoading(false);
     }
@@ -276,21 +356,6 @@ export default function AIToolsPage() {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-8 border-t border-border">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Box className="w-6 h-6 text-accent" />
-              <span className="font-semibold">Illusions Family</span>
-            </div>
-            <div className="text-sm text-gray-400">
-              &copy; 2024 Illusions Family. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
