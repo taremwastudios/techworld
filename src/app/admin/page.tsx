@@ -775,13 +775,13 @@ export default function AdminDashboard() {
                       value={newGame.price}
                       onChange={(e) => setNewGame({ ...newGame, price: Number(e.target.value) })}
                       className="w-full h-10 px-3 bg-primary border border-border text-white focus:border-accent"
-                      disabled={newGame.isFree}
+                      disabled={newGame.is_free}
                     />
                     <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                       <input
                         type="checkbox"
-                        checked={newGame.isFree}
-                        onChange={(e) => setNewGame({ ...newGame, isFree: e.target.checked, price: e.target.checked ? 0 : newGame.price })}
+                        checked={newGame.is_free}
+                        onChange={(e) => setNewGame({ ...newGame, is_free: e.target.checked, price: e.target.checked ? 0 : newGame.price })}
                         className="w-4 h-4"
                       />
                       <span className="text-sm text-gray-300">Free</span>
