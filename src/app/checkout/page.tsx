@@ -30,10 +30,15 @@ function CheckoutContent() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [checkoutStatus, setCheckoutStatus] = useState<'pending' | 'success' | 'cancelled' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal'>('stripe');
 
   useEffect(() => {
+    // Check for Stripe session
     if (searchParams.get('session_id')) {
-      handleCheckoutComplete();
+      handleStripeCheckoutComplete();
+    } else if (searchParams.get('token') || searchParams.get('orderId')) {
+      // Check for PayPal order (token is added by PayPal redirect)
+      handlePayPalCheckoutComplete();
     } else if (gameId) {
       fetchGame();
     } else {
@@ -87,6 +92,58 @@ function CheckoutContent() {
     }
   };
 
+  // Handle Stripe payment verification
+  const handleStripeCheckoutComplete = async () => {
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) return;
+
+    setLoading(true);
+    
+    try {
+      const res = await fetch('/api/stripe/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userId: user?.id }),
+      });
+      
+      if (res.ok) {
+        setCheckoutStatus('success');
+      } else {
+        setCheckoutStatus('cancelled');
+      }
+    } catch {
+      setCheckoutStatus('cancelled');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle PayPal payment verification
+  const handlePayPalCheckoutComplete = async () => {
+    const orderId = searchParams.get('orderId') || searchParams.get('token');
+    if (!orderId) return;
+
+    setLoading(true);
+    
+    try {
+      const res = await fetch('/api/paypal/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, userId: user?.id }),
+      });
+      
+      if (res.ok) {
+        setCheckoutStatus('success');
+      } else {
+        setCheckoutStatus('cancelled');
+      }
+    } catch {
+      setCheckoutStatus('cancelled');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePurchase = async () => {
     if (!game || !user) {
       router.push('/account');
@@ -97,27 +154,53 @@ function CheckoutContent() {
     setError('');
 
     try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gameId: game.id,
-          gameTitle: game.title,
-          price: game.price,
-          userId: user.id,
-          email: user.email,
-        }),
-      });
+      if (paymentMethod === 'paypal') {
+        // PayPal checkout
+        const res = await fetch('/api/paypal/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameId: game.id,
+            gameTitle: game.title,
+            price: game.price,
+            userId: user.id,
+          }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || 'Checkout failed');
-        return;
-      }
+        if (!res.ok) {
+          setError(data.error || 'PayPal checkout failed');
+          return;
+        }
 
-      if (data.url) {
-        window.location.href = data.url;
+        if (data.approvalUrl) {
+          window.location.href = data.approvalUrl;
+        }
+      } else {
+        // Stripe checkout (existing code)
+        const res = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameId: game.id,
+            gameTitle: game.title,
+            price: game.price,
+            userId: user.id,
+            email: user.email,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || 'Checkout failed');
+          return;
+        }
+
+        if (data.url) {
+          window.location.href = data.url;
+        }
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -289,6 +372,47 @@ function CheckoutContent() {
                 </div>
               )}
 
+              {/* Payment Method Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-400 mb-3">
+                  Select Payment Method
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('stripe')}
+                    className={`p-4 border rounded-lg transition-all ${
+                      paymentMethod === 'stripe'
+                        ? 'border-accent bg-accent/10'
+                        : 'border-border hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <CreditCard className={`w-6 h-6 ${paymentMethod === 'stripe' ? 'text-accent' : 'text-gray-400'}`} />
+                      <span className={`text-sm font-medium ${paymentMethod === 'stripe' ? 'text-white' : 'text-gray-400'}`}>
+                        Stripe
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('paypal')}
+                    className={`p-4 border rounded-lg transition-all ${
+                      paymentMethod === 'paypal'
+                        ? 'border-accent bg-accent/10'
+                        : 'border-border hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className={`text-lg font-bold ${paymentMethod === 'paypal' ? 'text-accent' : 'text-gray-400'}`}>Pay<span className="text-blue-500">Pal</span></span>
+                      <span className={`text-xs ${paymentMethod === 'paypal' ? 'text-white' : 'text-gray-500'}`}>
+                        Sandbox
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <button
                 onClick={handlePurchase}
                 disabled={processing || !user}
@@ -307,13 +431,16 @@ function CheckoutContent() {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    Pay ${game.price.toFixed(2)} with Stripe
+                    Pay ${game.price.toFixed(2)} with {paymentMethod === 'paypal' ? 'PayPal' : 'Stripe'}
                   </>
                 )}
               </button>
 
               <p className="text-center text-gray-500 text-xs mt-4">
-                Secure payment powered by Stripe. Google Pay available in Stripe checkout.
+                {paymentMethod === 'paypal' 
+                  ? 'Secure payment powered by PayPal Sandbox (Test Mode)'
+                  : 'Secure payment powered by Stripe. Google Pay available in Stripe checkout.'
+                }
               </p>
             </div>
           </div>

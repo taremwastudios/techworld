@@ -59,6 +59,8 @@ CREATE TABLE public.purchases (
   currency TEXT DEFAULT 'USD',
   stripe_payment_id TEXT,
   stripe_customer_id TEXT,
+  paypal_payment_id TEXT,
+  paypal_order_id TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'refunded', 'failed')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
