@@ -1,125 +1,216 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, CreditCard, Truck, Package, CheckCircle } from 'lucide-react';
-import { useCartStore } from '@/store/cart';
-import { useUserStore } from '@/store/user';
+import Image from 'next/image';
+import { 
+  ArrowLeft, 
+  CreditCard, 
+  Loader2, 
+  CheckCircle,
+  XCircle,
+  Gamepad2,
+  Brain,
+  ShoppingCart
+} from 'lucide-react';
 import Header from '@/components/Header';
-import { Address } from '@/lib/types';
+import { createClient } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import { SupabaseGame } from '@/lib/types';
 
-const steps = [
-  { id: 1, name: 'Cart', icon: Package },
-  { id: 2, name: 'Shipping', icon: Truck },
-  { id: 3, name: 'Payment', icon: CreditCard },
-  { id: 4, name: 'Review', icon: CheckCircle },
-];
-
-const shippingMethods = [
-  { id: 'standard', name: 'Standard Shipping', price: 0, days: '5-7 business days' },
-  { id: 'express', name: 'Express Shipping', price: 29.99, days: '2-3 business days' },
-  { id: 'overnight', name: 'Overnight Shipping', price: 59.99, days: 'Next business day' },
-];
-
-export default function CheckoutPage() {
+function CheckoutContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const { items, getTotal, clearCart } = useCartStore();
-  const { user, isAuthenticated } = useUserStore();
-  const [currentStep, setCurrentStep] = useState(2);
-  const [orderComplete, setOrderComplete] = useState(false);
-  const [orderId, setOrderId] = useState('');
+  const { user } = useAuth();
+  const gameId = searchParams.get('game');
+  
+  const [game, setGame] = useState<SupabaseGame | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [checkoutStatus, setCheckoutStatus] = useState<'pending' | 'success' | 'cancelled' | null>(null);
 
-  const [shippingAddress, setShippingAddress] = useState<Address>({
-    id: '',
-    name: user?.name || '',
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'United States',
-    isDefault: true,
-  });
+  useEffect(() => {
+    if (searchParams.get('session_id')) {
+      handleCheckoutComplete();
+    } else if (gameId) {
+      fetchGame();
+    } else {
+      setLoading(false);
+    }
+  }, [gameId, searchParams]);
 
-  const [shippingMethod, setShippingMethod] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCardCvc] = useState('');
-
-  const shippingCost = shippingMethods.find(m => m.id === shippingMethod)?.price || 0;
-  const subtotal = getTotal();
-  const tax = subtotal * 0.08;
-  const total = subtotal + shippingCost + tax;
-
-  const handleSubmitOrder = async () => {
-    const orderData = {
-      userId: user?.id || 'guest',
-      items,
-      shippingAddress,
-      total,
-    };
-
+  const fetchGame = async () => {
+    if (!gameId) return;
+    
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single();
       
-      const order = await res.json();
-      setOrderId(order.id);
-      setOrderComplete(true);
-      clearCart();
-    } catch (error) {
-      console.error('Failed to create order:', error);
+      if (data) {
+        setGame(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch game:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (items.length === 0 && !orderComplete) {
+  const handleCheckoutComplete = async () => {
+    const sessionId = searchParams.get('session_id');
+    if (!sessionId) return;
+
+    setLoading(true);
+    
+    try {
+      const res = await fetch('/api/stripe/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userId: user?.id }),
+      });
+      
+      if (res.ok) {
+        setCheckoutStatus('success');
+      } else {
+        setCheckoutStatus('cancelled');
+      }
+    } catch {
+      setCheckoutStatus('cancelled');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (!game || !user) {
+      router.push('/account');
+      return;
+    }
+
+    setProcessing(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: game.id,
+          gameTitle: game.title,
+          price: game.price,
+          userId: user.id,
+          email: user.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Checkout failed');
+        return;
+      }
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background-alt">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (checkoutStatus === 'success') {
+    return (
+      <div className="min-h-screen bg-primary">
         <Header />
         <main className="pt-24 pb-12 px-4">
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <Package className="w-16 h-16 mx-auto text-text-muted mb-4" />
-            <h1 className="text-2xl font-semibold mb-2">Your cart is empty</h1>
-            <Link href="/shop" className="text-accent hover:text-accent-hover">
-              Continue shopping
-            </Link>
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-primary-light border border-border p-8">
+              <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white mb-2">Purchase Complete!</h1>
+              <p className="text-gray-400 mb-6">
+                Thank you for your purchase. You can now download your game from My Library.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/account"
+                  className="block w-full py-3 bg-accent hover:bg-accent-hover text-white font-medium transition-colors"
+                >
+                  Go to My Library
+                </Link>
+                <Link
+                  href="/"
+                  className="block w-full py-3 border border-border text-white hover:bg-primary-light transition-colors"
+                >
+                  Continue Shopping
+                </Link>
+              </div>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  if (orderComplete) {
+  if (checkoutStatus === 'cancelled') {
     return (
-      <div className="min-h-screen bg-background-alt">
+      <div className="min-h-screen bg-primary">
         <Header />
         <main className="pt-24 pb-12 px-4">
-          <div className="max-w-2xl mx-auto text-center py-20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-success" />
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-primary-light border border-border p-8">
+              <XCircle className="w-16 h-16 text-error mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white mb-2">Checkout Cancelled</h1>
+              <p className="text-gray-400 mb-6">
+                Your purchase was cancelled. No charges were made.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/"
+                  className="block w-full py-3 bg-accent hover:bg-accent-hover text-white font-medium transition-colors"
+                >
+                  Continue Shopping
+                </Link>
+              </div>
             </div>
-            <h1 className="text-2xl font-semibold mb-2">Order Confirmed!</h1>
-            <p className="text-text-secondary mb-2">Order ID: {orderId}</p>
-            <p className="text-text-secondary mb-6">
-              Thank you for your order. You will receive a confirmation email shortly.
-            </p>
-            <div className="flex gap-4 justify-center">
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!game) {
+    return (
+      <div className="min-h-screen bg-primary">
+        <Header />
+        <main className="pt-24 pb-12 px-4">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-primary-light border border-border p-8">
+              <ShoppingCart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-white mb-2">No Item Selected</h1>
+              <p className="text-gray-400 mb-6">
+                Please select a game to purchase.
+              </p>
               <Link
-                href="/shop"
-                className="px-6 py-3 border border-border bg-white hover:bg-background-alt transition-colors"
+                href="/"
+                className="inline-block py-3 px-6 bg-accent hover:bg-accent-hover text-white font-medium transition-colors"
               >
-                Continue Shopping
-              </Link>
-              <Link
-                href="/account"
-                className="px-6 py-3 bg-accent hover:bg-accent-hover text-white transition-colors"
-              >
-                View Orders
+                Browse Store
               </Link>
             </div>
           </div>
@@ -129,370 +220,117 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background-alt">
+    <div className="min-h-screen bg-primary">
       <Header />
       
       <main className="pt-24 pb-12 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`flex items-center gap-2 ${
-                      currentStep >= step.id ? 'text-primary' : 'text-text-muted'
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center border-2 ${
-                        currentStep > step.id
-                          ? 'bg-success border-success text-white'
-                          : currentStep >= step.id
-                          ? 'border-primary bg-primary text-white'
-                          : 'border-border'
-                      }`}
-                    >
-                      {currentStep > step.id ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <step.icon className="w-4 h-4" />
-                      )}
-                    </div>
-                    <span className="hidden sm:block text-sm font-medium">{step.name}</span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`w-12 sm:w-24 h-0.5 mx-2 ${
-                        currentStep > step.id ? 'bg-success' : 'bg-border'
-                      }`}
-                    />
-                  )}
-                </div>
-              ))}
+        <div className="max-w-2xl mx-auto">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Continue Shopping
+          </Link>
+
+          <div className="bg-primary-light border border-border">
+            <div className="p-6 border-b border-border">
+              <h1 className="text-xl font-bold text-white">Complete Your Purchase</h1>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              {currentStep === 2 && (
-                <div className="bg-white border border-border p-6">
-                  <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.name}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, name: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-1">Street Address</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.street}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">City</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.city}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">State</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.state}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">ZIP Code</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.zipCode}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, zipCode: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Country</label>
-                      <input
-                        type="text"
-                        value={shippingAddress.country}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                        className="w-full h-10 px-3 border border-border focus:border-accent"
-                      />
-                    </div>
-                  </div>
-
-                  <h3 className="font-semibold mt-6 mb-3">Shipping Method</h3>
-                  <div className="space-y-2">
-                    {shippingMethods.map((method) => (
-                      <label
-                        key={method.id}
-                        className={`flex items-center justify-between p-4 border cursor-pointer ${
-                          shippingMethod === method.id
-                            ? 'border-accent bg-accent/5'
-                            : 'border-border hover:border-primary'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="shipping"
-                            value={method.id}
-                            checked={shippingMethod === method.id}
-                            onChange={() => setShippingMethod(method.id)}
-                            className="w-4 h-4 accent-accent"
-                          />
-                          <div>
-                            <p className="font-medium">{method.name}</p>
-                            <p className="text-sm text-text-secondary">{method.days}</p>
-                          </div>
-                        </div>
-                        <span className="font-medium">
-                          {method.price === 0 ? 'Free' : `$${method.price.toFixed(2)}`}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {currentStep === 3 && (
-                <div className="bg-white border border-border p-6">
-                  <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
-                  
-                  <div className="space-y-2 mb-6">
-                    <label
-                      className={`flex items-center p-4 border cursor-pointer ${
-                        paymentMethod === 'card'
-                          ? 'border-accent bg-accent/5'
-                          : 'border-border hover:border-primary'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="card"
-                        checked={paymentMethod === 'card'}
-                        onChange={() => setPaymentMethod('card')}
-                        className="w-4 h-4 accent-accent mr-3"
-                      />
-                      <CreditCard className="w-5 h-5 mr-2" />
-                      <span>Credit / Debit Card</span>
-                    </label>
-                    <label
-                      className={`flex items-center p-4 border cursor-pointer ${
-                        paymentMethod === 'invoice'
-                          ? 'border-accent bg-accent/5'
-                          : 'border-border hover:border-primary'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="invoice"
-                        checked={paymentMethod === 'invoice'}
-                        onChange={() => setPaymentMethod('invoice')}
-                        className="w-4 h-4 accent-accent mr-3"
-                      />
-                      <span>Invoice (Net 30)</span>
-                    </label>
-                  </div>
-
-                  {paymentMethod === 'card' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Card Number</label>
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          placeholder="1234 5678 9012 3456"
-                          className="w-full h-10 px-3 border border-border focus:border-accent"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Expiry Date</label>
-                          <input
-                            type="text"
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            placeholder="MM/YY"
-                            className="w-full h-10 px-3 border border-border focus:border-accent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">CVC</label>
-                          <input
-                            type="text"
-                            value={cardCvc}
-                            onChange={(e) => setCardCvc(e.target.value)}
-                            placeholder="123"
-                            className="w-full h-10 px-3 border border-border focus:border-accent"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {currentStep === 4 && (
-                <div className="space-y-4">
-                  <div className="bg-white border border-border p-6">
-                    <h3 className="font-semibold mb-3">Shipping Address</h3>
-                    <p className="text-text-secondary">{shippingAddress.name}</p>
-                    <p className="text-text-secondary">{shippingAddress.street}</p>
-                    <p className="text-text-secondary">
-                      {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}
-                    </p>
-                    <p className="text-text-secondary">{shippingAddress.country}</p>
-                  </div>
-
-                  <div className="bg-white border border-border p-6">
-                    <h3 className="font-semibold mb-3">Payment Method</h3>
-                    <p className="text-text-secondary">
-                      {paymentMethod === 'card'
-                        ? `Card ending in ${cardNumber.slice(-4) || '****'}`
-                        : 'Invoice (Net 30)'}
-                    </p>
-                  </div>
-
-                  <div className="bg-white border border-border p-6">
-                    <h3 className="font-semibold mb-3">Order Items</h3>
-                    <div className="space-y-3">
-                      {items.map((item) => (
-                        <div key={item.productId} className="flex gap-3">
-                          <div className="w-12 h-12 bg-background-alt shrink-0">
-                            <Image
-                              src={item.product.image}
-                              alt={item.product.name}
-                              width={48}
-                              height={48}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm line-clamp-1">{item.product.name}</p>
-                            <p className="text-sm text-text-secondary">Qty: {item.quantity}</p>
-                          </div>
-                          <p className="font-medium">
-                            ${(item.product.price * item.quantity).toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between mt-6">
-                {currentStep > 2 ? (
-                  <button
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    className="flex items-center gap-2 px-6 py-3 border border-border bg-white hover:bg-background-alt transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                  </button>
+            <div className="p-6 flex items-start gap-6">
+              <div className="w-32 h-32 bg-primary shrink-0 relative overflow-hidden">
+                {game.image_url ? (
+                  <Image
+                    src={game.image_url}
+                    alt={game.title}
+                    fill
+                    className="object-cover"
+                  />
                 ) : (
-                  <Link
-                    href="/cart"
-                    className="flex items-center gap-2 px-6 py-3 border border-border bg-white hover:bg-background-alt transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Cart
-                  </Link>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {game.category === 'AI' ? (
+                      <Brain className="w-12 h-12 text-purple-400" />
+                    ) : (
+                      <Gamepad2 className="w-12 h-12 text-gray-500" />
+                    )}
+                  </div>
                 )}
-                
-                {currentStep < 4 ? (
-                  <button
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white transition-colors"
-                  >
-                    Continue
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleSubmitOrder}
-                    className="flex items-center gap-2 px-6 py-3 bg-success hover:bg-success/90 text-white transition-colors"
-                  >
-                    Place Order
-                    <Check className="w-4 h-4" />
-                  </button>
-                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs px-2 py-0.5 border ${
+                    game.category === 'AI'
+                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                      : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                  }`}>
+                    {game.category}
+                  </span>
+                  <span className="text-xs font-mono text-gray-500">v{game.version}</span>
+                </div>
+                <h2 className="text-xl font-semibold text-white mb-2">{game.title}</h2>
+                <p className="text-gray-400 text-sm">{game.description}</p>
               </div>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="bg-white border border-border p-6 sticky top-24">
-                <h2 className="font-semibold mb-4">Order Summary</h2>
-                
-                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin mb-4">
-                  {items.map((item) => (
-                    <div key={item.productId} className="flex gap-3">
-                      <div className="w-12 h-12 bg-background-alt shrink-0 relative">
-                        <Image
-                          src={item.product.image}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                        />
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-xs flex items-center justify-center">
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-1">{item.product.name}</p>
-                        <p className="text-sm text-text-secondary">
-                          ${(item.product.price * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="border-t border-border pt-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Shipping</span>
-                    <span>
-                      {shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-secondary">Tax</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <div className="border-t border-border pt-4 mt-4">
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                </div>
+            <div className="p-6 border-t border-border">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-400">Subtotal</span>
+                <span className="text-white">${game.price.toFixed(2)}</span>
               </div>
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-gray-400">Total</span>
+                <span className="text-2xl font-bold text-white">${game.price.toFixed(2)}</span>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-error/10 border border-error/20 text-error text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handlePurchase}
+                disabled={processing || !user}
+                className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : !user ? (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Sign In to Purchase
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5" />
+                    Pay ${game.price.toFixed(2)} with Stripe
+                  </>
+                )}
+              </button>
+
+              <p className="text-center text-gray-500 text-xs mt-4">
+                Secure payment powered by Stripe. Google Pay available in Stripe checkout.
+              </p>
             </div>
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function GameCheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

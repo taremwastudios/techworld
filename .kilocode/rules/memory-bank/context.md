@@ -31,6 +31,12 @@ TechWorld is an Amazon-style ordering platform built with Next.js 16, TypeScript
 - [x] File validation (.exe, .zip, .apk, max 5GB)
 - [x] Admin authentication protection on /admin route
 - [x] Upload API endpoint for game files
+- [x] Supabase integration for auth and database
+- [x] Supabase Storage for .apk file hosting
+- [x] Stripe checkout integration with payment verification
+- [x] My Library section for purchased games/APKs
+- [x] Split landing page into AI Tools and Game Store sections
+- [x] Removed search bar from header
 
 ## Current Structure
 
@@ -48,19 +54,24 @@ TechWorld is an Amazon-style ordering platform built with Next.js 16, TypeScript
 | `src/app/api/auth/` | Authentication API | Complete |
 | `src/app/api/games/` | Games API | Complete |
 | `src/app/api/upload/` | File upload API | Complete |
+| `src/app/api/stripe/` | Stripe checkout API | Complete |
+| `src/lib/supabase.ts` | Supabase client | Complete |
+| `src/components/AuthProvider.tsx` | Supabase auth context | Complete |
+| `src/components/Providers.tsx` | App providers wrapper | Complete |
 | `src/components/` | UI components | Complete |
 | `src/store/` | Zustand stores | Complete |
 | `src/lib/` | Types and mock data | Complete |
 
 ## Routing
 
-- `/` - Landing Page (TechWorld branding)
+- `/` - Landing Page with AI Tools and Game Store sections
 - `/shop` - Product Catalog
 - `/cart` - Shopping Cart
-- `/checkout` - Multi-step Checkout
-- `/account` - User Account/Login
-- `/admin` - Admin Dashboard
+- `/checkout` - Game checkout with Stripe
+- `/account` - User Account/Login with My Library
+- `/admin` - Admin Dashboard (Supabase auth)
 - `/studio` - Developer Showcase (Phantom Illusions Studio)
+- `/download/[id]` - Download purchased games
 
 ## Demo Credentials
 
@@ -74,6 +85,8 @@ TechWorld is an Amazon-style ordering platform built with Next.js 16, TypeScript
 - Tailwind CSS 4
 - Zustand (state management)
 - Lucide React (icons)
+- Supabase (Auth + Database + Storage)
+- Stripe (Payments)
 
 ## Session History
 
@@ -84,11 +97,12 @@ TechWorld is an Amazon-style ordering platform built with Next.js 16, TypeScript
 | Phase 2 | Landing page added, branding updated to TechWorld |
 | Phase 3 | Developer Showcase page with SmartAI Console and Game Store added |
 | Phase 4 | Admin Dashboard with file upload, deep blue theme, authentication |
+| Phase 5 | Supabase integration (Auth, Database, Storage), Stripe checkout, My Library |
 
 ## Pending Improvements
 
-- [ ] Real database integration (PostgreSQL/MongoDB)
 - [ ] Email notifications
-- [ ] Payment gateway integration
 - [ ] Advanced search with Elasticsearch
 - [ ] Order tracking emails
+- [ ] PayPal integration
+- [ ] Real database migration from mock data

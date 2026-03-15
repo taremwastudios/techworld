@@ -71,3 +71,45 @@ export interface Game {
   fileName?: string;
   createdAt: string;
 }
+
+export interface SupabaseGame {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image_url: string;
+  download_url: string;
+  is_free: boolean;
+  version: string;
+  category: 'AI' | 'Gaming';
+  download_count: number;
+  file_size?: number;
+  file_name?: string;
+  storage_path?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupabaseProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  role: 'buyer' | 'admin';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupabasePurchase {
+  id: string;
+  user_id: string;
+  game_id: string;
+  product_id: string | null;
+  amount: number;
+  currency: string;
+  stripe_payment_id: string;
+  stripe_customer_id: string;
+  status: 'pending' | 'completed' | 'refunded' | 'failed';
+  created_at: string;
+}

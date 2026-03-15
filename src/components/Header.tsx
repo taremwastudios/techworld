@@ -17,11 +17,6 @@ export default function Header({ onSearch }: HeaderProps) {
   const itemCount = useCartStore((state) => state.getItemCount());
   const { user, isAuthenticated, logout } = useUserStore();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch?.(searchQuery);
-  };
-
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
@@ -36,36 +31,12 @@ export default function Header({ onSearch }: HeaderProps) {
             <span className="text-xl font-bold tracking-tight">TechWorld</span>
           </Link>
           <Link 
-            href="/shop" 
-            className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
-          >
-            Shop
-          </Link>
-          <Link 
             href="/studio" 
             className="hidden md:block text-sm text-gray-300 hover:text-white transition-colors"
           >
             Developer Showcase
           </Link>
         </div>
-
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
-          <div className="flex w-full">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products..."
-              className="flex-1 h-10 px-4 text-primary bg-white border-0 focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-            <button
-              type="submit"
-              className="h-10 px-6 bg-accent hover:bg-accent-hover transition-colors border-0"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
-        </form>
 
         <div className="flex items-center gap-4">
           <Link href="/cart" className="relative p-2 hover:bg-primary-light transition-colors">
@@ -145,31 +116,7 @@ export default function Header({ onSearch }: HeaderProps) {
 
         {mobileMenuOpen && (
           <div className="absolute top-16 left-0 right-0 bg-primary border-t border-primary-light p-4 md:hidden">
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="flex">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="flex-1 h-10 px-4 text-primary bg-white border-0 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="h-10 px-4 bg-accent hover:bg-accent-hover transition-colors"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
-              </div>
-            </form>
             <div className="space-y-2">
-              <Link 
-                href="/shop" 
-                className="block py-2 text-gray-300 hover:text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Shop
-              </Link>
               <Link 
                 href="/studio" 
                 className="block py-2 text-gray-300 hover:text-white"

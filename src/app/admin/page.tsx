@@ -24,18 +24,20 @@ import {
   Download,
   Search,
   Brain,
-  Zap
+  Zap,
+  AlertCircle
 } from 'lucide-react';
 import Header from '@/components/Header';
-import { Product, Order, Game } from '@/lib/types';
-import { useUserStore } from '@/store/user';
+import { createClient } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import { Product, Order, SupabaseGame, SupabaseProfile } from '@/lib/types';
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated } = useUserStore();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('releases');
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
+  const [games, setGames] = useState<SupabaseGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddGame, setShowAddGame] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -43,40 +45,57 @@ export default function AdminDashboard() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [profile, setProfile] = useState<SupabaseProfile | null>(null);
   
   const [newGame, setNewGame] = useState({
     title: '',
     description: '',
     price: 0,
     image: '',
-    downloadUrl: '',
-    isFree: false,
+    download_url: '',
+    is_free: false,
     version: '1.0.0',
     category: 'Gaming' as 'AI' | 'Gaming',
   });
 
   const [searchQuery, setSearchQuery] = useState('');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gamesWithAlias: any[] = games;
+
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'admin') {
-      fetchData();
+    if (authUser !== null) {
+      checkAdminAndFetch();
     }
-  }, [isAuthenticated, user]);
+  }, [authUser]);
+
+  const checkAdminAndFetch = async () => {
+    const supabase = createClient();
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
+    
+    if (profileData) {
+      setProfile(profileData);
+      if (profileData.role === 'admin') {
+        fetchData();
+      }
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ordersRes, productsRes, gamesRes] = await Promise.all([
-        fetch('/api/orders'),
-        fetch('/api/products'),
-        fetch('/api/games'),
-      ]);
-      const ordersData = await ordersRes.json();
-      const productsData = await productsRes.json();
-      const gamesData = await gamesRes.json();
-      setOrders(ordersData);
-      setProducts(productsData.products);
-      setGames(gamesData.games || []);
+      const supabase = createClient();
+      
+      const { data: gamesData } = await supabase
+        .from('games')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      setGames(gamesData || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -288,14 +307,22 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (!authUser || profile?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-primary">
         <Header />
         <main className="pt-24 pb-12 px-4">
           <div className="max-w-md mx-auto text-center">
             <div className="bg-primary-light border border-border p-8">
-              <Cloud className="w-16 h-16 text-accent mx-auto mb-4" />
+              <AlertCircle className="w-16 h-16 text-accent mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-white mb-4">Admin Access Required</h1>
               <p className="text-gray-400 mb-6">
                 You must be logged in as an administrator to access this page.
@@ -326,7 +353,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <span>Logged in as</span>
-              <span className="text-white font-medium">{user?.name}</span>
+              <span className="text-white font-medium">{profile?.full_name || authUser.email}</span>
             </div>
           </div>
 
