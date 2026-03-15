@@ -520,7 +520,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="p-4 text-sm font-medium text-white">
-                            {game.isFree ? (
+                            {game.is_free ? (
                               <span className="text-success">FREE</span>
                             ) : (
                               `$${game.price.toFixed(2)}`
