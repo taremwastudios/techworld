@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const gamesWithAlias: any[] = games;
 
   useEffect(() => {

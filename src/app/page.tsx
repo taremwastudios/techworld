@@ -20,7 +20,8 @@ import {
   Package,
   Server,
   Users,
-  CreditCard
+  CreditCard,
+  Lock
 } from 'lucide-react';
 import Header from '@/components/Header';
 
@@ -51,8 +52,7 @@ export default function LandingPage() {
             </p>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
               Discover, purchase, and download amazing games and AI applications. 
-              Your library, accessible anywhere in the world. Join thousands of satisfied customers 
-              who trust Illusions Family for their digital entertainment needs.
+              Your library, accessible anywhere in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -73,47 +73,85 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Services Section */}
+        {/* About Section */}
         <section className="py-16 md:py-24 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-primary">Our Services</h2>
-            <p className="text-text-secondary text-center max-w-2xl mx-auto mb-12">
-              We provide a comprehensive platform for digital content distribution, 
-              featuring secure payments, instant downloads, and cloud library access.
-            </p>
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">About Illusions Family</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-8 border border-border hover:border-primary transition-colors">
-                <Gamepad2 className="w-12 h-12 text-accent mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-primary">Premium Games</h3>
-                <p className="text-text-secondary">
-                  Access a curated collection of premium games developed by Phantom Illusions Studio. 
-                  From action-packed adventures to mind-bending puzzles, discover your next favorite game.
-                </p>
-              </div>
+            <div className="prose prose-lg max-w-none text-text-secondary space-y-6">
+              <p>
+                At the intersection of cutting-edge artificial intelligence and high-performance interactive entertainment stands Illusions Family, 
+                a digital infrastructure engineered for those who demand efficiency without compromise. Founded and operated by a lean, two-person 
+                executive team, Illusions Family was established to bridge the gap between complex software development and the end-user experience. 
+                Our mission is singular: to provide the global market with the most streamlined, reliable, and powerful AI tools and Android 
+                gaming packages available in the modern digital landscape. We do not believe in the clutter of traditional marketplaces; 
+                we believe in precision, speed, and the raw utility of professional-grade software.
+              </p>
               
-              <div className="p-8 border border-border hover:border-primary transition-colors">
-                <Brain className="w-12 h-12 text-purple-600 mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-primary">AI Development Tools</h3>
-                <p className="text-text-secondary">
-                  Empower your AI projects with SmartAI Console and developer tools. 
-                  Build, train, and deploy custom machine learning models with our comprehensive SDKs.
-                </p>
-              </div>
+              <p>
+                The genesis of Illusions Family was rooted in a shared observation of the digital distribution sector's fragmentation. 
+                We noted that while the world was rapidly adopting AI and mobile gaming, the platforms delivering these tools were often 
+                inefficient, visually distracting, and technically bloated. As a two-person operation, we chose a different path—one defined 
+                by radical efficiency. By maintaining a compact leadership structure, we ensure that every line of code, every .apk file, 
+                and every AI model hosted on our platform undergoes rigorous personal verification. This hands-on approach allows us to pivot 
+                faster than corporate giants, implementing security patches and performance updates in real-time, ensuring that our global 
+                user base is always equipped with the latest advancements in technology.
+              </p>
               
-              <div className="p-8 border border-border hover:border-primary transition-colors">
-                <Cloud className="w-12 h-12 text-accent mb-4" />
-                <h3 className="text-xl font-semibold mb-3 text-primary">Cloud Library</h3>
-                <p className="text-text-secondary">
-                  Your purchases are safely stored in the cloud. Access your entire game 
-                  and AI tool collection from any device, anywhere, anytime.
-                </p>
-              </div>
+              <p>
+                The "Family" in our name is not a reference to a social collective, but rather a structural philosophy. It represents 
+                a unified ecosystem where AI and Gaming coexist in a seamless technical environment. Our AI division is dedicated to 
+                productivity and innovation, offering a wide display of tools designed to automate complex workflows and provide users 
+                with a competitive edge in a data-driven world. Simultaneously, our Game Store serves as a repository for 
+                high-fidelity gaming experiences, specifically curated and optimized for the Android platform. By splitting these two 
+                pillars into distinct showcases within our dashboard, we provide a structured user journey that respects the professional 
+                requirements of the developer and the entertainment needs of the gamer.
+              </p>
+              
+              <p>
+                Operating a global distribution system requires a robust backend architecture, which is why Illusions Family is built 
+                upon the Supabase ecosystem. This choice was deliberate, ensuring that every "Techworld" account—now rebranded under 
+                our definitive Illusions Family identity—is a fortress of personal data and digital assets. When a user joins our family, 
+                their acquisitions are not merely temporary downloads; they are permanent entries in a secure, cloud-based library. We 
+                understand the volatility of hardware; devices are lost, upgraded, or compromised. However, an Illusions Family account 
+                remains a constant. Our persistence layer ensures that your AI tools and .apk packages are tied to your identity, 
+                allowing for immediate re-acquisition across any device, anywhere in the world, at any time.
+              </p>
+              
+              <p>
+                Our aesthetic reflects our operational philosophy: sharp, professional, and devoid of unnecessary ornamentation. In a 
+                digital era saturated with distracting visuals and "rounded" friendly templates, Illusions Family stands apart with 
+                a high-contrast, "Enterprise-sharp" design. We use 0px border-radii and professional iconography to signal our 
+                commitment to serious utility. This is not a social media platform; it is a professional tool and an elite gaming 
+                repository. Our AI tools page, presented on a refined cream-colored canvas with wide-display imagery, is designed 
+                for clarity and focus, allowing the technical specifications and descriptions of each tool to remain the primary 
+                objective of the user's gaze.
+              </p>
+              
+              <p>
+                The logistics of our global operation are handled through a multi-tiered payment integration system. By incorporating 
+                Stripe, PayPal, and Google Pay, we have removed the barriers to entry for users across different continents and 
+                banking systems. This financial flexibility, coupled with our secure administrative portal, allows our two-person 
+                team to manage an international inventory with the precision of a high-frequency trading firm. The admin login is 
+                the nerve center of Illusions Family, where we personally oversee the lifecycle of every .apk package, ensuring 
+                that only the most stable and efficient versions reach your dashboard. If a tool no longer meets our standard 
+                of excellence, it is removed; if a new breakthrough in AI occurs, it is integrated immediately.
+              </p>
+              
+              <p>
+                As we look toward the future, Illusions Family continues to refine its role as a premier digital purveyor. We are 
+                not just a store; we are a specialized service run by two individuals who value the user's time as much as their 
+                own. Every decision made at the executive level—from the choice of a professional box-logo favicon to the removal of 
+                the main page search bar in favor of a structured dashboard—is made to enhance the efficiency of your digital life. 
+                We provide the tools that build the future and the games that define the modern era of mobile entertainment. 
+                Welcome to Illusions Family: where professional architecture meets global innovation, and where the most efficient 
+                tools in the world are only a single, secure click away.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Why Choose Us Section */}
         <section className="py-16 md:py-24 bg-blue-50">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-primary">Why Choose Us</h2>
