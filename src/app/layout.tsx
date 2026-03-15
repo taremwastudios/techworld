@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Illusions Family - Premium Games & AI Tools",
   description: "Illusions Family - Your destination for premium games and AI tools. Download APKs, purchase games, and access your library anywhere.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.svg",
   },
 };
 
