@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "Illusions Family - Premium Games & AI Tools",
   description: "Illusions Family - Your destination for premium games and AI tools. Download APKs, purchase games, and access your library anywhere.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/WhatsApp Image 2026-03-10 at 10.35.08 PM.jpeg",
   },
 };
 

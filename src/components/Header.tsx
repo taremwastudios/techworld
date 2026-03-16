@@ -31,11 +31,11 @@ export default function Header({ onSearch }: HeaderProps) {
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 shrink-0">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-8 h-8">
-              <rect fill="#0F172A" width="32" height="32" rx="0"/>
-              <path fill="#F59E0B" d="M16 6L6 12v8l10 6 10-6v-8L16 6zm0 2.5l7 4.2v6.6l-7 4.2-7-4.2v-6.6l7-4.2z"/>
-              <circle fill="#F59E0B" cx="16" cy="16" r="4"/>
-            </svg>
+            <img 
+              src="/WhatsApp Image 2026-03-10 at 10.35.08 PM.jpeg" 
+              alt="Illusions Family" 
+              className="w-8 h-8 object-contain"
+            />
             <span className="text-xl font-bold tracking-tight text-white">Illusions Family</span>
           </Link>
           <Link 
