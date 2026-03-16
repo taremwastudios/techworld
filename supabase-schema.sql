@@ -79,6 +79,14 @@ CREATE POLICY "Admins can read all profiles" ON public.profiles
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 
+-- Allow users to insert their own profile (needed for signup)
+CREATE POLICY "Users can insert own profile" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Allow service role to insert profiles
+CREATE POLICY "Service role can insert profiles" ON public.profiles
+  FOR INSERT WITH CHECK (true);
+
 -- Products: Everyone can read active products
 CREATE POLICY "Anyone can read active products" ON public.products
   FOR SELECT USING (is_active = true);

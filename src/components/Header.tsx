@@ -1,10 +1,10 @@
 'use client';
 
-import { Search, ShoppingCart, User, Menu, X, Box, LogOut, LayoutDashboard } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
-import { useUserStore } from '@/store/user';
+import { useAuth } from '@/components/AuthProvider';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -15,10 +15,14 @@ export default function Header({ onSearch }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const itemCount = useCartStore((state) => state.getItemCount());
-  const { user, isAuthenticated, logout } = useUserStore();
+  const { user, loading: authLoading, signOut } = useAuth();
+  
+  const isAuthenticated = !!user;
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userRole = (user?.user_metadata?.role as string) || 'buyer';
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     setUserMenuOpen(false);
   };
 
@@ -27,7 +31,11 @@ export default function Header({ onSearch }: HeaderProps) {
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6 shrink-0">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Box className="w-8 h-8 text-accent" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-8 h-8">
+              <rect fill="#0F172A" width="32" height="32" rx="0"/>
+              <path fill="#F59E0B" d="M16 6L6 12v8l10 6 10-6v-8L16 6zm0 2.5l7 4.2v6.6l-7 4.2-7-4.2v-6.6l7-4.2z"/>
+              <circle fill="#F59E0B" cx="16" cy="16" r="4"/>
+            </svg>
             <span className="text-xl font-bold tracking-tight text-white">Illusions Family</span>
           </Link>
           <Link 
@@ -62,17 +70,17 @@ export default function Header({ onSearch }: HeaderProps) {
                   className="flex items-center gap-2 p-2 hover:bg-primary-light transition-colors"
                 >
                   <User className="w-6 h-6" />
-                  <span className="hidden lg:block text-sm">{user?.name}</span>
+                  <span className="hidden lg:block text-sm">{userName}</span>
                 </button>
                 
                 {userMenuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 bg-white text-primary shadow-dropdown border border-border">
                     <div className="p-3 border-b border-border">
-                      <p className="font-medium">{user?.name}</p>
+                      <p className="font-medium">{userName}</p>
                       <p className="text-sm text-text-secondary">{user?.email}</p>
                     </div>
                     <div className="py-1">
-                      {user?.role === 'admin' && (
+                      {userRole === 'admin' && (
                         <Link
                           href="/admin"
                           className="flex items-center gap-2 px-4 py-2 hover:bg-background-alt transition-colors"

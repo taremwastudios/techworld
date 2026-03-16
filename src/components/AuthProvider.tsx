@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase';
+import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -113,12 +114,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!error && data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role: 'buyer',
-      });
+      // Use service role to bypass RLS for profile creation
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (supabaseUrl && serviceRoleKey) {
+        const adminClient = createSupabaseAdmin(supabaseUrl, serviceRoleKey);
+        const { error: profileError } = await adminClient.from('profiles').insert({
+          id: data.user.id,
+          email,
+          full_name: fullName,
+          role: 'buyer',
+        });
+        
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        }
+      } else {
+        // Fallback to regular client if no service role key
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          email,
+          full_name: fullName,
+          role: 'buyer',
+        });
+      }
     }
 
     return { error: error as Error | null };
